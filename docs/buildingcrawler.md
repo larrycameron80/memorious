@@ -297,6 +297,50 @@ Parameters:
 * `table`: the name of the database table in which data will be stored
 * `unique`: A list of keys in data. If `unique` is defined, we try to update existing columns based on the values of keys in `unique`. If no matching row is found, a new row is inserted.
 
+The `db` method can also be used to store nested `data` in separate database tables by specifying the `children` params.
+`children` is a list of dictionaries containing the following parameters:
+
+* `key`: The key in the `data` dictionary under which the nested data lives
+* `unique`: A list of keys in the nested data that has to unique in the table. If `unique` is defined, we try to update existing columns based on the values of keys in `unique`. If no matching row is found, a new row is inserted.
+* `table_suffix`: The table name for the child data is the parent table name with this suffix attached. Defaults to `key` if not defined.
+* `inherit`: A dictionary of keys to copy from the parent data dictionary. Keys in `inherit` are columns in child data table; values are keys in the parent `data` from where the contents are copied.
+
+Example:
+
+If we have data like this:
+```
+{
+  "id": "person420"
+  "name": "John Doe"
+  "aliases": [{"name": "Jon Doe"}]
+}
+```
+
+And we want to store the alieases in a separate table, we can write a nested db stage like the following:
+
+```
+name: ...
+description: ...
+schedule: ...
+pipeline:
+  ...
+  store:
+    method: db
+    params:
+    - table: wanted_persons
+      unique:
+        - id
+        - name
+      children:
+        key: aliases
+        table_suffix: aliases
+        inherit:
+          - enityt_id: id
+        unique:
+          - entity_id
+          - name
+```
+
 ### Rules
 
 You can configure rules per stage to tell certain methods which inputs to process or skip. You can nest them, and apply `not`, `and` and `or` for the combinations you desire.
